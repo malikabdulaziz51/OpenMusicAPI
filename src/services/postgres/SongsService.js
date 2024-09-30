@@ -46,12 +46,12 @@ class SongsService {
             WHERE LOWER(title) LIKE '%${title}%' 
             AND LOWER(performer) LIKE '%${performer}%'`,
       };
-    } else if(title || performer){
+    } else if (title || performer) {
       query = {
         text: `SELECT * FROM songs 
             WHERE LOWER(title) LIKE '%${title || performer}%' 
-            OR LOWER(performer) LIKE '%${title || performer}%'`
-      }
+            OR LOWER(performer) LIKE '%${title || performer}%'`,
+      };
     } else {
       query = "SELECT * FROM songs";
     }
@@ -103,6 +103,18 @@ class SongsService {
         throw new NotFoundError("Lagu gagal dihapus. Id tidak ditemukan");
       }
     });
+  }
+
+  async verifySongId(id) {
+    const query = {
+      text: "SELECT id FROM songs WHERE id = $1",
+      values: [id],
+    };
+
+    const result = await this._pool.query(query);
+    if (!result.rowCount) {
+      throw new NotFoundError("Lagu tidak ditemukan");
+    }
   }
 }
 
