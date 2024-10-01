@@ -37,9 +37,9 @@ const PlaylistsValidator = require("./validator/playlists");
 
 const init = async () => {
   const collaborationsService = new CollaborationsService();
+  const songsService = new SongsService();
   const playlistsService = new PlaylistsService();
   const albumsService = new AlbumsService();
-  const songsService = new SongsService();
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
   const server = Hapi.server({
@@ -125,7 +125,7 @@ const init = async () => {
   server.ext('onPreResponse', (request, h) => {
     // mendapatkan konteks response dari request
     const { response } = request;
-
+    console.log(response);
     if (response instanceof Error) {
  
       // penanganan client error secara internal.

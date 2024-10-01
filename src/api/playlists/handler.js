@@ -52,7 +52,7 @@ class PlaylistsHandler {
   async deletePlaylistHandler(request) {
     const { playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
-
+    
     await this._service.verifyPlaylistOwner(playlistId, credentialId);
     await this._service.deletePlaylist(playlistId);
 
@@ -67,7 +67,7 @@ class PlaylistsHandler {
     const { playlistId } = request.params;
     const { songId } = request.payload;
     const { id: credentialId } = request.auth.credentials;
-    console.log(credentialId);
+
     await this._service.verifyPlaylistAccess(playlistId, credentialId);
 
     await this._service.addSongToPlaylist(playlistId, songId, credentialId);

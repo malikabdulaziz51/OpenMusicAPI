@@ -173,15 +173,23 @@ class PlaylistsService {
         throw err;
       }
 
-      // TODO: Check using Collaborations Service
       try {
-        this._collaborationsService.verifyCollaborator(
-          playlistId,
-          userId
-        );
+        await this._collaborationsService.verifyCollaborator(playlistId, userId);
       } catch {
         throw err;
       }
+    }
+  }
+
+  async verifyPlaylistById(playlistId) {
+    const query = {
+      text: "SELECT * FROM playlists WHERE id = $1",
+      values: [playlistId],
+    };
+
+    const result = await this._pool.query(query);
+    if (!result.rowCount) {
+      throw new NotFoundError("Playlist tidak ditemukan");
     }
   }
 

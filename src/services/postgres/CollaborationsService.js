@@ -1,14 +1,19 @@
 const { nanoid } = require("nanoid");
 const { Pool } = require("pg");
 const InvariantError = require("../../exceptions/InvariantError");
+const UsersService = require("./UsersService");
 
 class CollaborationsService {
   constructor() {
     this._pool = new Pool();
+    this._userService = new UsersService();
   }
 
   async addCollaboration(playlistId, userId) {
     const id = `collab-${nanoid(16)}`;
+
+    await this._userService.getUserById(userId);
+
     const query = {
       text: "INSERT INTO collaborations VALUES($1, $2, $3) RETURNING id",
       values: [id, playlistId, userId],
@@ -42,7 +47,7 @@ class CollaborationsService {
 
     const result = await this._pool.query(query);
     if (!result.rows.length) {
-      throw new InvariantError("Kolaborasi gagal diverifikasi");
+      throw new InvariantError("Kolaborator gagal diverifikasi");
     }
   }
 }

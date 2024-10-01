@@ -13,7 +13,8 @@ class PlaylistSongsActivities {
                join playlist_song_activities psa ON psa.playlist_id = p.id 
                join songs s on s.id = psa.song_id 
                join users u on psa.user_id = u.id 
-               where p.id = $1`,
+               where p.id = $1
+               ORDER BY psa.time ASC`,
       values: [playlistId],
     };
 
