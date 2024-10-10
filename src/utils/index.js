@@ -22,11 +22,12 @@ const mapDetailSongDBToModel = ({
   albumId,
 });
 
-const mapDetailAlbumDBToModel = ({ id, name, year, songs }) => ({
+const mapDetailAlbumDBToModel = ({ id, name, year, songs, coverUrl }) => ({
   id,
   name,
   year,
   songs: songs?.map(mapSongDBToModel),
+  coverUrl,
 });
 
 const mapDetailPlaylistSongsDBToModel = ({ id, name, username, songs }) => ({

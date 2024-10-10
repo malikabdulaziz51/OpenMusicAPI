@@ -35,13 +35,35 @@ const playlists = require("./api/playlists");
 const PlaylistsService = require("./services/postgres/PlaylistsService");
 const PlaylistsValidator = require("./validator/playlists");
 
+//Exports
+const _exports = require("./api/exports");
+const ProducerService = require("./services/rabbitmq/ProducerService");
+const ExportValidator = require("./validator/exports");
+
+//Uploads
+const uploads = require("./api/uploads");
+const UploadsValidator = require("./validator/uploads");
+const StorageService = require("./services/storage/StorageService");
+const Inert = require("@hapi/inert");
+
+//Likes
+const likes = require("./api/likes");
+const LikesService = require("./services/postgres/LikeAlbumService");
+
+//cache redis
+const CacheService = require("./services/redis/CacheService");
+const path = require("path");
+
 const init = async () => {
+  const cacheService = new CacheService();
   const collaborationsService = new CollaborationsService();
   const songsService = new SongsService();
   const playlistsService = new PlaylistsService();
   const albumsService = new AlbumsService();
+  const likesService = new LikesService(cacheService);
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
+  const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
@@ -55,6 +77,9 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -120,18 +145,38 @@ const init = async () => {
         validator: CollaborationsValidator,
       },
     },
+    {
+      plugin: _exports,
+      options: {
+        service: ProducerService,
+        validator: ExportValidator,
+      },
+    },
+    {
+      plugin: uploads,
+      options: {
+        service: storageService,
+        validator: UploadsValidator,
+      },
+    },
+    {
+      plugin: likes,
+      options: {
+        service: likesService,
+      },
+    },
   ]);
 
-  server.ext('onPreResponse', (request, h) => {
+  server.ext("onPreResponse", (request, h) => {
+    
     // mendapatkan konteks response dari request
     const { response } = request;
-    console.log(response);
+    // console.log(response);
     if (response instanceof Error) {
- 
       // penanganan client error secara internal.
       if (response instanceof ClientError) {
         const newResponse = h.response({
-          status: 'fail',
+          status: "fail",
           message: response.message,
         });
         newResponse.code(response.statusCode);
@@ -145,8 +190,8 @@ const init = async () => {
 
       // penanganan server error sesuai kebutuhan
       const newResponse = h.response({
-        status: 'error',
-        message: 'terjadi kegagalan pada server kami',
+        status: "error",
+        message: "terjadi kegagalan pada server kami",
       });
       newResponse.code(500);
       return newResponse;

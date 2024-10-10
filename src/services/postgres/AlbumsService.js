@@ -18,12 +18,12 @@ class AlbumsService {
       values: [id, name, year, createdAt, updatedAt],
     };
 
-    return await this._pool
-      .query(query)
-      .then((result) => result.rows[0].id)
-      .catch(() => {
-        throw new InvariantError("Album gagal ditambahkan");
-      });
+    const result = await this._pool.query(query);
+    if (!result.rows[0].id) {
+      throw new InvariantError("Album gagal ditambahkan");
+    }
+
+    return result.rows[0].id;
   }
 
   async getAlbums() {
@@ -37,6 +37,7 @@ class AlbumsService {
       a.id,
       a.name,
       a.year,
+      a.cover as "coverUrl",
       COALESCE(
         json_agg(
           json_build_object('id', s.id, 'title', s.title, 'performer', s.performer)
@@ -50,7 +51,7 @@ class AlbumsService {
     if (!result.rowCount) {
       throw new NotFoundError("Album tidak ditemukan");
     }
-    console.log(result.rows[0]);
+
     return result.rows?.map(mapDetailAlbumDBToModel)[0];
   }
 
@@ -79,6 +80,22 @@ class AlbumsService {
         throw new NotFoundError("Album gagal dihapus. Id tidak ditemukan");
       }
     });
+  }
+
+  async updateAlbumCoverById(data, url) {
+    const updatedAt = new Date().toISOString();
+    const query = {
+      text: "UPDATE albums SET cover = $1, updated_at = $2 WHERE id = $3 RETURNING id",
+      values: [url, updatedAt, data.id],
+    };
+    const result = await this._pool.query(query);
+    if (!result.rowCount) {
+      throw new NotFoundError(
+        "Gagal memperbarui cover album. Id tidak ditemukan"
+      );
+    }
+
+    return result.rows[0].id;
   }
 }
 
